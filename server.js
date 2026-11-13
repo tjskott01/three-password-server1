@@ -42,9 +42,20 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders
 
 const page = (title, body) => `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
-<style>body{font-family:system-ui,sans-serif;max-width:420px;margin:15vh auto;padding:0 1rem}
-input,button{font-size:1rem;padding:.6rem;width:100%;box-sizing:border-box;margin-top:.5rem}
-.err{color:#c00}.hint{margin-top:1rem;color:#555}</style></head><body>${body}</body></html>`;
+<style>
+:root{color-scheme:dark}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#141414;color:#e6e6e6;max-width:420px;margin:15vh auto;padding:0 1rem;line-height:1.5}
+h1{font-weight:600;font-size:1.5rem;color:#fff}
+input,button{font-size:1rem;padding:.7rem .8rem;width:100%;box-sizing:border-box;margin-top:.6rem;border-radius:10px;border:1px solid #333}
+input{background:#1e1e1e;color:#fff;outline:none}
+input:focus{border-color:#7c5cff}
+button{background:#7c5cff;color:#fff;border:none;cursor:pointer;font-weight:600}
+button:hover{background:#6a4be6}
+.err{color:#ff6b6b}
+.hint{margin-top:1.2rem;padding:.6rem .9rem;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;color:#aaa}
+.hint ul{margin:.3rem 0 0;padding-left:1.2rem}
+img{max-width:100%;border-radius:10px}
+</style></head><body>${body}</body></html>`;
 
 function requireStep(step) {
   return (req, res, next) => ((req.session.step || 0) >= step ? next() : res.redirect('/'));
