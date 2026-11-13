@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 // Passwords come from environment variables (set as secrets on the host), never from the code.
 const plain = [process.env.PASSWORD_1, process.env.PASSWORD_2, process.env.PASSWORD_3];
@@ -54,7 +56,9 @@ button:hover{background:#6a4be6}
 .err{color:#ff6b6b}
 .hint{margin-top:1.2rem;padding:.6rem .9rem;background:#1c1c1c;border:1px solid #2a2a2a;border-radius:10px;color:#aaa}
 .hint ul{margin:.3rem 0 0;padding-left:1.2rem}
-img{max-width:100%;border-radius:10px}
+img{max-width:100%;border-radius:10px;display:block}
+figure{margin:1.2rem 0}figcaption{color:#999;font-size:.9rem;margin-top:.4rem}
+button.secondary{background:#2a2a2a}button.secondary:hover{background:#333}
 </style></head><body>${body}</body></html>`;
 
 function requireStep(step) {
@@ -83,10 +87,35 @@ app.post('/check', limiter, (req, res) => {
   }
 });
 
+// Turns content.md into simple HTML.
+// "# Title" = heading, "![caption](photo.jpg)" = picture from the images folder, blank line = new paragraph.
+function renderContent() {
+  let md = '';
+  try { md = fs.readFileSync(path.join(__dirname, 'content.md'), 'utf8'); } catch { md = '# Access granted'; }
+  return md.replace(/\r/g, '').split(/\n\s*\n/).map((block) => {
+    const b = block.trim();
+    if (!b) return '';
+    const img = b.match(/^!\[(.*?)\]\((.+?)\)$/);
+    if (img) {
+      const file = path.basename(img[2]);
+      return `<figure><img src="/images/${encodeURIComponent(file)}" alt="${esc(img[1])}">${img[1] ? `<figcaption>${esc(img[1])}</figcaption>` : ''}</figure>`;
+    }
+    const h = b.match(/^(#{1,3})\s+(.*)$/);
+    if (h) return `<h${h[1].length}>${esc(h[2])}</h${h[1].length}>`;
+    return `<p>${esc(b).replace(/\n/g, '<br>')}</p>`;
+  }).join('\n');
+}
+
+// Pictures are only served after all three passwords are accepted.
+app.get('/images/:file', requireStep(3), (req, res) => {
+  const file = path.join(__dirname, 'images', path.basename(req.params.file));
+  if (!fs.existsSync(file)) return res.status(404).send('Not found');
+  res.sendFile(file);
+});
+
 app.get('/protected', requireStep(3), (req, res) => {
-  res.send(page('Access granted', `<h1>Access granted</h1>
-    <p>This content is only available after three correct passwords.</p>
-    <form method="POST" action="/logout"><button>Log out</button></form>`));
+  res.send(page('Welcome', `${renderContent()}
+    <form method="POST" action="/logout" style="margin-top:2rem"><button class="secondary">Log out</button></form>`));
 });
 
 app.post('/logout', (req, res) => req.session.destroy(() => res.redirect('/')));
