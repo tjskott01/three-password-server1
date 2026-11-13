@@ -1,0 +1,80 @@
+const express = require('express');
+const session = require('express-session');
+const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+
+// Passwords come from environment variables (set as secrets on the host), never from the code.
+const plain = [process.env.PASSWORD_1, process.env.PASSWORD_2, process.env.PASSWORD_3];
+if (plain.some((p) => !p)) {
+  console.error('Set PASSWORD_1, PASSWORD_2 and PASSWORD_3 environment variables.');
+  process.exit(1);
+}
+// Hash them in memory at startup; plain text is not kept around for comparisons.
+const hashes = plain.map((p) => {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return { salt, hash: crypto.scryptSync(p, salt, 64).toString('hex') };
+});
+const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const PORT = process.env.PORT || 3000;
+
+function matches(input, { salt, hash }) {
+  const got = crypto.scryptSync(String(input || ''), salt, 64);
+  return crypto.timingSafeEqual(got, Buffer.from(hash, 'hex'));
+}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const app = express();
+app.set('trust proxy', 1);
+app.use(express.urlencoded({ extended: false }));
+app.use(session({
+  secret: sessionSecret,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 1000 }
+}));
+
+// At most 10 password attempts per IP every 15 minutes
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false,
+  message: 'Too many attempts. Try again in 15 minutes.' });
+
+const page = (title, body) => `<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
+<style>body{font-family:system-ui,sans-serif;max-width:420px;margin:15vh auto;padding:0 1rem}
+input,button{font-size:1rem;padding:.6rem;width:100%;box-sizing:border-box;margin-top:.5rem}
+.err{color:#c00}</style></head><body>${body}</body></html>`;
+
+function requireStep(step) {
+  return (req, res, next) => ((req.session.step || 0) >= step ? next() : res.redirect('/'));
+}
+
+app.get('/', (req, res) => {
+  const step = req.session.step || 0;
+  if (step >= 3) return res.redirect('/protected');
+  const err = req.session.error;
+  req.session.error = null;
+  res.send(page('Password', `<h1>Password ${step + 1} of 3</h1>
+    <form method="POST" action="/check">
+      <input type="password" name="password" required autofocus>
+      <button>Continue</button>
+    </form>${err ? `<p class="err">${esc(err)}</p>` : ''}`));
+});
+
+app.post('/check', limiter, (req, res) => {
+  const step = req.session.step || 0;
+  if (step < 3 && matches(req.body.password, hashes[step])) {
+    req.session.regenerate(() => { req.session.step = step + 1; res.redirect('/'); });
+  } else {
+    req.session.error = 'Incorrect password';
+    res.redirect('/');
+  }
+});
+
+app.get('/protected', requireStep(3), (req, res) => {
+  res.send(page('Access granted', `<h1>Access granted</h1>
+    <p>This content is only available after three correct passwords.</p>
+    <form method="POST" action="/logout"><button>Log out</button></form>`));
+});
+
+app.post('/logout', (req, res) => req.session.destroy(() => res.redirect('/')));
+
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
