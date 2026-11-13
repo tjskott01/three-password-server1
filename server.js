@@ -14,6 +14,9 @@ const hashes = plain.map((p) => {
   const salt = crypto.randomBytes(16).toString('hex');
   return { salt, hash: crypto.scryptSync(p, salt, 64).toString('hex') };
 });
+// Optional hints, one env var per password. Separate several hints with |
+const hints = [process.env.HINT_1, process.env.HINT_2, process.env.HINT_3]
+  .map((h) => (h || '').split('|').map((x) => x.trim()).filter(Boolean));
 const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const PORT = process.env.PORT || 3000;
 
@@ -41,7 +44,7 @@ const page = (title, body) => `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
 <style>body{font-family:system-ui,sans-serif;max-width:420px;margin:15vh auto;padding:0 1rem}
 input,button{font-size:1rem;padding:.6rem;width:100%;box-sizing:border-box;margin-top:.5rem}
-.err{color:#c00}</style></head><body>${body}</body></html>`;
+.err{color:#c00}.hint{margin-top:1rem;color:#555}</style></head><body>${body}</body></html>`;
 
 function requireStep(step) {
   return (req, res, next) => ((req.session.step || 0) >= step ? next() : res.redirect('/'));
@@ -56,7 +59,7 @@ app.get('/', (req, res) => {
     <form method="POST" action="/check">
       <input type="password" name="password" required autofocus>
       <button>Continue</button>
-    </form>${err ? `<p class="err">${esc(err)}</p>` : ''}`));
+    </form>${hints[step].length ? `<div class="hint"><strong>Hint${hints[step].length > 1 ? 's' : ''}:</strong><ul>${hints[step].map((h) => `<li>${esc(h)}</li>`).join('')}</ul></div>` : ''}${err ? `<p class="err">${esc(err)}</p>` : ''}`));
 });
 
 app.post('/check', limiter, (req, res) => {
