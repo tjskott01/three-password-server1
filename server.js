@@ -92,18 +92,26 @@ app.post('/check', limiter, (req, res) => {
 function renderContent() {
   let md = '';
   try { md = fs.readFileSync(path.join(__dirname, 'content.md'), 'utf8'); } catch { md = '# Access granted'; }
-  return md.replace(/\r/g, '').split(/\n\s*\n/).map((block) => {
-    const b = block.trim();
-    if (!b) return '';
-    const img = b.match(/^!\[(.*?)\]\((.+?)\)$/);
+  // Picture and heading lines always stand on their own, even without blank lines around them.
+  const blocks = [];
+  let para = [];
+  const flush = () => { if (para.length) blocks.push(`<p>${esc(para.join('\n')).replace(/\n/g, '<br>')}</p>`); para = []; };
+  for (const raw of md.replace(/\r/g, '').split('\n')) {
+    const line = raw.trim();
+    if (!line) { flush(); continue; }
+    const img = line.match(/^!\[(.*?)\]\((.+?)\)$/);
     if (img) {
+      flush();
       const file = path.basename(img[2]);
-      return `<figure><img src="/images/${encodeURIComponent(file)}" alt="${esc(img[1])}">${img[1] ? `<figcaption>${esc(img[1])}</figcaption>` : ''}</figure>`;
+      blocks.push(`<figure><img src="/images/${encodeURIComponent(file)}" alt="${esc(img[1])}">${img[1] ? `<figcaption>${esc(img[1])}</figcaption>` : ''}</figure>`);
+      continue;
     }
-    const h = b.match(/^(#{1,3})\s+(.*)$/);
-    if (h) return `<h${h[1].length}>${esc(h[2])}</h${h[1].length}>`;
-    return `<p>${esc(b).replace(/\n/g, '<br>')}</p>`;
-  }).join('\n');
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    if (h) { flush(); blocks.push(`<h${h[1].length}>${esc(h[2])}</h${h[1].length}>`); continue; }
+    para.push(raw.trimEnd());
+  }
+  flush();
+  return blocks.join('\n');
 }
 
 // Pictures are only served after all three passwords are accepted.
