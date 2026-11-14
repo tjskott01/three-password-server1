@@ -48,4 +48,6 @@ encouraged by you. I cannot hear anymore of your stories after you have listened
 This is why I miss you and I have missed you and I will miss you. I still want to tell you everything and I love that feeling. 
 
 
+![](costumes.jpg)
+
 To be continued...
