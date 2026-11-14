@@ -49,5 +49,5 @@ This is why I miss you and I have missed you and I will miss you. I still want t
 
 
 ![](costumes.jpg)
-
+So sleepy now, long day of soccer and seeing friends. I feel so much lighter. I love your hair. Good night.
 To be continued...
