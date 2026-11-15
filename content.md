@@ -41,13 +41,20 @@ to suffer and when he encountered suffering in others he healed them. I asked Mi
 that Jesus cared for those people he healed?" Milan responded flippantly "I think that maybe he cared for them." Intently I replied "Would you be willing to say he loved the people he healed?" and Milan said yes. 
 This was my final flourish of the conversation. "Milan I would suggest to you that God's motive is love, that Jesus taught many things, but we sometimes choose to only follow some of them. If I truly tried to live out 
 Jesus's teachings like 'Turn the other cheek when struck', 'go the extra mile', and 'it is better to give than to receive.' I think that my life would be better for it _because of love._ My whole goal was to have Milan
-consider that perhaps the words of God were meant to me more than intellectual play. Perhaps they were meant to heal.
+consider that perhaps the words of God were meant to be more than intellectual play. Perhaps they were meant to heal.
 
 So these are two stories from one day in my life. The tale of Stephan happened after the conversation with Milan. Now I am left with these thoughts and I cannot tell them to you. I cannot be surprised by your perspective, or 
 encouraged by you. I cannot hear anymore of your stories after you have listened to mine. 
 This is why I miss you and I have missed you and I will miss you. I still want to tell you everything and I love that feeling. 
 
 
+
+
 ![](costumes.jpg)
+
 So sleepy now, long day of soccer and seeing friends. I feel so much lighter. I love your hair. Good night.
+
+I woke up Saturday morning to a notification and I thought I was dreaming,lol. I have a story from today, but I am laying in bed while my eyes are getting heavy. I will write more tomorrow. CPR/First aid course tomorrow but it will be in Czech! :S
+eyes closing...pray, sleep.
+
 To be continued...
